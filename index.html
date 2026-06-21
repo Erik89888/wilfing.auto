@@ -294,14 +294,55 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
    ========================================================================= */
 .hero{
   position:relative; min-height:100vh; display:flex; align-items:center;
-  padding-block:calc(var(--header-h) + 3rem) 4rem;
-  background-image:
-    linear-gradient(135deg, rgba(0,56,117,.82) 0%, rgba(0,20,60,.65) 100%),
-    url("https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1600&q=80");
-  background-size:cover; background-position:center; color:#fff;
+  padding-block:calc(var(--header-h) + 3rem) 5rem;
+  background:#00203f; color:#fff; overflow:hidden; isolation:isolate;
 }
-.hero-inner{ max-width:760px; }
+/* Layer 0 · Parallax-Foto, abgedunkelt */
+.hero-media{ position:absolute; inset:-6% 0; z-index:0; will-change:transform; }
+.hero-media img{ width:100%; height:100%; object-fit:cover; filter:brightness(.46) saturate(1.05); }
+/* Layer 1 · Markenblau-Verlauf (Lesbarkeit) */
+.hero-overlay{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:
+    radial-gradient(115% 90% at 80% 8%, rgba(0,85,179,.42), transparent 56%),
+    linear-gradient(135deg, rgba(0,40,95,.86) 0%, rgba(0,20,60,.5) 42%, rgba(0,16,46,.94) 100%);
+}
+/* Layer 1 · freigestelltes Maskottchen – klein & leicht transparent, unten am Rand */
+.hero-mascot-bg{
+  position:absolute; z-index:1; right:clamp(12px,4vw,64px); bottom:0;
+  width:clamp(140px,16vw,230px); height:auto; aspect-ratio:178/191;
+  opacity:.5; filter:drop-shadow(0 10px 24px rgba(0,0,0,.4)); pointer-events:none;
+}
+@media (max-width:768px){
+  .hero-mascot-bg{ width:clamp(96px,24vw,150px); opacity:.4; }
+}
+/* Layer 2 · animierter Aurora-Shader – additiv & dezent */
+.hero-shader{
+  position:absolute; inset:0; width:100%; height:100%; z-index:2;
+  mix-blend-mode:screen; opacity:.45; pointer-events:none;
+  transition:opacity .8s ease;
+}
+.hero-inner{ position:relative; z-index:3; max-width:780px; }
 .hero-mascot{ width:72px; height:76px; margin-bottom:.6rem; filter:drop-shadow(0 6px 14px rgba(0,0,0,.45)); }
+
+/* Wort-für-Wort-Einblendung der Hero-Überschrift */
+@keyframes wordReveal{ from{ opacity:0; transform:translateY(26px); } to{ opacity:1; transform:translateY(0); } }
+.hero-word{ display:inline-block; opacity:0; animation:wordReveal .7s cubic-bezier(.2,.7,.2,1) var(--wd,0s) both; }
+
+/* Scroll-Hinweis am unteren Hero-Rand */
+.hero-hint{
+  position:absolute; left:50%; bottom:24px; transform:translateX(-50%); z-index:3;
+  display:flex; flex-direction:column; align-items:center; gap:.55rem;
+  font-family:var(--font-heading); font-weight:600; font-size:.72rem;
+  letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.62);
+}
+.hero-hint .line{ width:1px; height:34px; background:rgba(255,255,255,.5); animation:hintDrop 1.9s infinite; }
+@keyframes hintDrop{
+  0%{ transform:scaleY(0); transform-origin:top; }
+  40%{ transform:scaleY(1); transform-origin:top; }
+  60%{ transform:scaleY(1); transform-origin:bottom; }
+  100%{ transform:scaleY(0); transform-origin:bottom; }
+}
 .hero-overtitle{
   font-family:var(--font-heading); font-weight:600; font-size:var(--text-sm);
   letter-spacing:.2em; text-transform:uppercase; color:var(--color-accent);
@@ -412,7 +453,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
 .about-media{ position:relative; }
 .about-media::before{
   content:""; position:absolute; inset:auto auto -22px -22px; width:60%; height:70%;
-  background:var(--color-primary-light); border-radius:var(--radius-card); z-index:0;
+  background:var(--color-accent); opacity:.18; border-radius:var(--radius-card); z-index:0;
 }
 .about-media img{ position:relative; z-index:1; width:100%; border-radius:var(--radius-card); box-shadow:var(--shadow-hover); }
 .about-body h2{ font-size:clamp(2.625rem, 5.6vw, 3.15rem); color:var(--color-primary); margin-bottom:1rem; text-wrap:balance; }
@@ -537,11 +578,97 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
 .site-header:has(.nav-toggle:checked){ background:var(--color-primary); }
 
 /* =========================================================================
+   16b. MARKEN-LAUFBAND  ·  Marquee mit Fabrikaten
+   ========================================================================= */
+.brandbar{ background:var(--color-primary); border-block:1px solid rgba(255,255,255,.12); overflow:hidden; }
+.brandbar-track{
+  display:flex; gap:3.25rem; width:max-content; align-items:center;
+  padding-block:1.15rem; animation:brandScroll 34s linear infinite; opacity:.9;
+}
+.brandbar:hover .brandbar-track{ animation-play-state:paused; }
+.brandbar-track span{
+  font-family:var(--font-heading); font-weight:700; letter-spacing:.07em;
+  font-size:1.05rem; color:rgba(255,255,255,.82); white-space:nowrap;
+}
+.brandbar-track .dot{ color:var(--color-accent); }
+@keyframes brandScroll{ to{ transform:translateX(-50%); } }
+
+/* =========================================================================
+   16c. EINBLICKE  ·  Bild-Galerie (Mosaik)
+   ========================================================================= */
+.gallery{ display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:200px; gap:1rem; }
+.gallery-item{ position:relative; overflow:hidden; border-radius:var(--radius-card); box-shadow:var(--shadow-card); }
+.gallery-item img{ width:100%; height:100%; object-fit:cover; transition:transform .6s ease; }
+.gallery-item:hover img{ transform:scale(1.07); }
+.gallery-item::after{ content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(0,20,60,.4), transparent 58%); }
+.gallery-item .cap{
+  position:absolute; left:1.1rem; bottom:.9rem; z-index:2; color:#fff;
+  font-family:var(--font-heading); font-weight:600; font-size:var(--text-base);
+  letter-spacing:.03em; text-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+.gallery-item.tall{ grid-row:span 2; }
+.gallery-item.wide{ grid-column:span 2; }
+
+/* =========================================================================
+   16d. KUNDENSTIMMEN  ·  Bewertungs-Karten
+   ========================================================================= */
+.reviews{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--space-gap); }
+.review{
+  background:var(--color-surface); border:1px solid var(--color-border);
+  border-radius:var(--radius-card); padding:1.9rem; box-shadow:var(--shadow-card);
+  display:flex; flex-direction:column; gap:1rem;
+  transition:transform var(--transition), box-shadow var(--transition);
+}
+.review:hover{ transform:translateY(-4px); box-shadow:var(--shadow-hover); }
+.review-stars{ color:var(--color-accent); letter-spacing:.12em; font-size:var(--text-lg); }
+.review p{ color:var(--color-text); font-size:var(--text-lg); line-height:1.6; flex:1; }
+.review-author{ display:flex; align-items:center; gap:.85rem; }
+.review-author img{ width:48px; height:48px; border-radius:50%; object-fit:cover; flex:none; }
+.review-author b{ display:block; color:var(--color-primary); font-family:var(--font-heading); letter-spacing:.02em; }
+.review-author span{ font-size:var(--text-sm); color:var(--color-text-muted); }
+
+/* =========================================================================
+   16e. CTA-BANNER  ·  Hintergrundbild
+   ========================================================================= */
+.cta-banner{ position:relative; overflow:hidden; isolation:isolate; }
+.cta-media{ position:absolute; inset:0; z-index:0; }
+.cta-media img{ width:100%; height:100%; object-fit:cover; filter:brightness(.32) saturate(1.05); }
+.cta-banner::after{ content:""; position:absolute; inset:0; z-index:1; background:linear-gradient(135deg, rgba(0,40,95,.82), rgba(0,16,46,.9)); }
+.cta-banner .container{ position:relative; z-index:2; }
+
+/* =========================================================================
+   16f. BACK-TO-TOP
+   ========================================================================= */
+.totop{
+  position:fixed; right:18px; bottom:18px; z-index:900;
+  width:46px; height:46px; border-radius:50%;
+  background:var(--color-primary); color:#fff; border:0; cursor:pointer;
+  display:grid; place-items:center; box-shadow:var(--shadow-hover);
+  opacity:0; pointer-events:none; transform:translateY(12px); transition:.3s;
+}
+.totop.show{ opacity:1; pointer-events:auto; transform:none; }
+.totop:hover{ background:var(--color-primary-mid); }
+.totop svg{ width:20px; height:20px; }
+
+/* Galerie- & Bewertungs-Layouts mobil */
+@media (max-width:1024px){ .reviews{ grid-template-columns:1fr; } }
+@media (max-width:768px){
+  .gallery{ grid-template-columns:repeat(2,1fr); grid-auto-rows:160px; }
+  .gallery-item.wide{ grid-column:span 2; }
+}
+@media (max-width:480px){
+  .gallery{ grid-template-columns:1fr; grid-auto-rows:200px; }
+  .gallery-item.tall{ grid-row:span 1; }
+  .gallery-item.wide{ grid-column:span 1; }
+}
+
+/* =========================================================================
    16. REDUCED MOTION
    ========================================================================= */
 @media (prefers-reduced-motion:reduce){
   *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
   .reveal{ opacity:1; transform:none; }
+  .hero-word{ opacity:1 !important; transform:none !important; }
 }
 </style>
 </head>
@@ -591,15 +718,29 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
        SECTION: HERO
        =================================================================== -->
   <section id="hero" class="hero">
+
+    <!-- Layer 0 · Parallax-Foto -->
+    <div class="hero-media" id="heroMedia">
+      <img src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=1600&q=80" alt="" aria-hidden="true" />
+    </div>
+
+    <!-- Layer 1 · Markenblau-Verlauf -->
+    <div class="hero-overlay" aria-hidden="true"></div>
+
+    <!-- Layer 1 · freigestelltes Maskottchen als dezentes Wasserzeichen -->
+    <span class="mascot hero-mascot-bg" role="img" aria-label="Wilfing Auto Werkstatt-Maskottchen"></span>
+
+    <!-- Layer 2 · animierter Aurora-Shader (WebGL, dezent) -->
+    <canvas class="hero-shader" id="heroShader" aria-hidden="true"></canvas>
+
     <div class="container hero-inner">
-      <span class="mascot hero-mascot" role="img" aria-label="Wilfing Auto Werkstatt-Maskottchen"></span>
-      <p class="hero-overtitle">Ihre Werkstatt in Steinheim an der Murr</p>
-      <h1>Ihr Partner für<br />alle Fahrzeuge.</h1>
-      <p class="hero-sub">
+      <p class="hero-overtitle reveal">Ihre Werkstatt in Steinheim an der Murr</p>
+      <h1 id="heroTitle">Ihr Partner für alle Fahrzeuge.</h1>
+      <p class="hero-sub reveal">
         Von der Inspektion bis zur Karosserie – erfahren, zuverlässig und fair.
         Über 25 Jahre Erfahrung im Raum Ludwigsburg.
       </p>
-      <div class="hero-cta">
+      <div class="hero-cta reveal">
         <a href="#kontakt" class="btn btn-white">
           Termin vereinbaren
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -607,7 +748,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
         <a href="#leistungen" class="btn btn-ghost">Leistungen entdecken</a>
       </div>
 
-      <div class="hero-trust">
+      <div class="hero-trust reveal">
         <span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           TÜV-Partnerservice
@@ -626,7 +767,22 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
         </span>
       </div>
     </div>
+
+    <div class="hero-hint" aria-hidden="true">
+      <span>Scrollen</span>
+      <span class="line"></span>
+    </div>
   </section>
+
+  <!-- ===================================================================
+       SECTION: MARKEN-LAUFBAND  ·  Fabrikate, die wir betreuen
+       =================================================================== -->
+  <div class="brandbar" aria-label="Fabrikate, die wir betreuen">
+    <div class="brandbar-track" aria-hidden="true">
+      <span>VW</span><span class="dot">·</span><span>BMW</span><span class="dot">·</span><span>AUDI</span><span class="dot">·</span><span>MERCEDES</span><span class="dot">·</span><span>OPEL</span><span class="dot">·</span><span>FORD</span><span class="dot">·</span><span>ŠKODA</span><span class="dot">·</span><span>SEAT</span><span class="dot">·</span><span>TESLA</span><span class="dot">·</span><span>HYUNDAI</span><span class="dot">·</span>
+      <span>VW</span><span class="dot">·</span><span>BMW</span><span class="dot">·</span><span>AUDI</span><span class="dot">·</span><span>MERCEDES</span><span class="dot">·</span><span>OPEL</span><span class="dot">·</span><span>FORD</span><span class="dot">·</span><span>ŠKODA</span><span class="dot">·</span><span>SEAT</span><span class="dot">·</span><span>TESLA</span><span class="dot">·</span><span>HYUNDAI</span><span class="dot">·</span>
+    </div>
+  </div>
 
   <!-- ===================================================================
        SECTION: STATS  ·  Zahlen-Leiste (Counter)
@@ -819,9 +975,53 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
   </section>
 
   <!-- ===================================================================
+       SECTION: EINBLICKE  ·  Werkstatt-Galerie
+       =================================================================== -->
+  <section id="einblicke" class="section">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Einblicke</p>
+        <h2>Ein Blick in unsere Werkstatt</h2>
+        <p>Moderne Technik, ehrliche Handarbeit und ein eingespieltes Team – so sieht zuverlässiger Service aus.</p>
+      </div>
+
+      <div class="gallery reveal">
+        <a class="gallery-item tall" href="#kontakt" aria-label="Werkstatt-Einblick: Hebebühne">
+          <img src="https://images.pexels.com/photos/4489749/pexels-photo-4489749.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Fahrzeug auf der Hebebühne" loading="lazy" />
+          <span class="cap">Hebebühne &amp; Unterbodencheck</span>
+        </a>
+        <a class="gallery-item wide" href="#kontakt" aria-label="Werkstatt-Einblick: Diagnose">
+          <img src="https://images.pexels.com/photos/6870313/pexels-photo-6870313.jpeg?auto=compress&cs=tinysrgb&w=1000" alt="Mechaniker mit Diagnosegerät" loading="lazy" />
+          <span class="cap">Computer-Diagnose</span>
+        </a>
+        <a class="gallery-item" href="#kontakt" aria-label="Werkstatt-Einblick: Motorraum">
+          <img src="https://images.pexels.com/photos/3807277/pexels-photo-3807277.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Arbeit am Motor" loading="lazy" />
+          <span class="cap">Motor-Service</span>
+        </a>
+        <a class="gallery-item" href="#kontakt" aria-label="Werkstatt-Einblick: Reifen">
+          <img src="https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=800&q=80" alt="Gestapelte Reifen" loading="lazy" />
+          <span class="cap">Reifenservice</span>
+        </a>
+        <a class="gallery-item wide" href="#kontakt" aria-label="Werkstatt-Einblick: Karosserie">
+          <img src="https://images.pexels.com/photos/5835359/pexels-photo-5835359.jpeg?auto=compress&cs=tinysrgb&w=1000" alt="Karosserie-Arbeit" loading="lazy" />
+          <span class="cap">Karosserie &amp; Lack</span>
+        </a>
+        <a class="gallery-item wide" href="#kontakt" aria-label="Werkstatt-Einblick: Werkstatt">
+          <img src="https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=1000&q=80" alt="Blick in die Werkstatt" loading="lazy" />
+          <span class="cap">Unsere Halle</span>
+        </a>
+        <a class="gallery-item wide" href="#kontakt" aria-label="Werkstatt-Einblick: Innenraum">
+          <img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1000&q=80" alt="Fahrzeug-Innenraum mit Klimabedienung" loading="lazy" />
+          <span class="cap">Innenraum &amp; Klima</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
        SECTION: ÜBER UNS
        =================================================================== -->
-  <section id="ueber-uns" class="section">
+  <section id="ueber-uns" class="section section--tint">
     <div class="container">
       <div class="about">
 
@@ -847,6 +1047,50 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
 
           <a href="#kontakt" class="link-arrow" style="font-size:var(--text-base)">Unser Team kennenlernen <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
         </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       SECTION: KUNDENSTIMMEN
+       =================================================================== -->
+  <section id="kundenstimmen" class="section">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="eyebrow">Kundenstimmen</p>
+        <h2>Was unsere Kunden sagen</h2>
+        <p>Über 150 Bewertungen mit durchschnittlich 4,9 Sternen – Vertrauen, das wir uns jeden Tag neu verdienen.</p>
+      </div>
+
+      <div class="reviews reveal">
+
+        <article class="review">
+          <div class="review-stars" aria-label="5 von 5 Sternen">★★★★★</div>
+          <p>„Schnell, ehrlich und fair – die Inspektion war günstiger als beim Vertragshändler und genauso gründlich. Klare Empfehlung!"</p>
+          <div class="review-author">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=80" alt="" loading="lazy" />
+            <span><b>Michael Brandt</b><span>Steinheim a. d. Murr</span></span>
+          </div>
+        </article>
+
+        <article class="review">
+          <div class="review-stars" aria-label="5 von 5 Sternen">★★★★★</div>
+          <p>„Termin am nächsten Tag, Ersatzwagen inklusive und alles transparent erklärt. So stelle ich mir eine Werkstatt vor."</p>
+          <div class="review-author">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80" alt="" loading="lazy" />
+            <span><b>Sandra Keller</b><span>Marbach am Neckar</span></span>
+          </div>
+        </article>
+
+        <article class="review">
+          <div class="review-stars" aria-label="5 von 5 Sternen">★★★★★</div>
+          <p>„Mein Oldtimer ist hier in besten Händen. Man merkt die Leidenschaft fürs Handwerk an jedem Detail."</p>
+          <div class="review-author">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80" alt="" loading="lazy" />
+            <span><b>Thomas Vogt</b><span>Ludwigsburg</span></span>
+          </div>
+        </article>
 
       </div>
     </div>
@@ -903,6 +1147,9 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
        SECTION: CTA-BANNER (Kontakt)
        =================================================================== -->
   <section id="kontakt" class="cta-banner">
+    <div class="cta-media" aria-hidden="true">
+      <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=1600&q=80" alt="" loading="lazy" />
+    </div>
     <div class="container">
       <p class="eyebrow">Wie Sie uns erreichen</p>
       <h2>Möchten Sie direkt einen Termin<br />vereinbaren oder eine Frage stellen?</h2>
@@ -999,6 +1246,11 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
   </div>
 </footer>
 
+<!-- Zurück nach oben -->
+<button class="totop" id="totop" type="button" aria-label="Nach oben scrollen">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+
 <!-- ===================================================================
      SCRIPTS
      =================================================================== -->
@@ -1006,13 +1258,28 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
 (function () {
   'use strict';
 
-  /* --- 1 · Sticky Header: Klasse 'scrolled' ab 80px Scroll-Tiefe --- */
-  var header = document.getElementById('header');
+  /* --- 1 · Sticky Header + Hero-Parallax + Back-to-Top --- */
+  var header    = document.getElementById('header');
+  var heroMedia = document.getElementById('heroMedia');
+  var toTop     = document.getElementById('totop');
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   function onScroll() {
-    header.classList.toggle('scrolled', window.scrollY > 80);
+    var y = window.scrollY;
+    header.classList.toggle('scrolled', y > 80);
+    if (toTop) toTop.classList.toggle('show', y > 640);
+    if (heroMedia && !reduceMotion && y < window.innerHeight) {
+      heroMedia.style.transform = 'translateY(' + (y * 0.22) + 'px)';
+    }
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
+  if (toTop) {
+    toTop.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+  }
 
   /* --- 2 · Counter-Animation (Stats) via IntersectionObserver --- */
   function animateCounter(el) {
@@ -1077,8 +1344,140 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: 600; line-height
       if (navToggle) navToggle.checked = false; // Mobilmenü schließen
     });
   });
+
+  /* --- 5 · Hero-Überschrift Wort-für-Wort einblenden --- */
+  (function () {
+    var h1 = document.getElementById('heroTitle');
+    if (!h1 || reduceMotion) return;
+    var words = h1.textContent.trim().split(/\s+/);
+    h1.innerHTML = words.map(function (w, i) {
+      return '<span class="hero-word" style="--wd:' + (0.15 + i * 0.075).toFixed(3) + 's">' + w + '</span>';
+    }).join(' ');
+  })();
+
+  /* --- 6 · Animierter Aurora-Shader im Hero (WebGL, dezent) --- */
+  (function () {
+    var canvas = document.getElementById('heroShader');
+    if (!canvas || reduceMotion) return;
+
+    var gl = canvas.getContext('webgl', { antialias: true, premultipliedAlpha: false })
+          || canvas.getContext('experimental-webgl');
+    if (!gl) { canvas.style.display = 'none'; return; }
+
+    var vsSrc =
+      'attribute vec2 position;' +
+      'void main(){ gl_Position = vec4(position, 0.0, 1.0); }';
+
+    var fsSrc = [
+      'precision highp float;',
+      'uniform float iTime;',
+      'uniform vec2 iResolution;',
+      '#define NUM_OCTAVES 3',
+      'float rand(vec2 n){ return fract(sin(dot(n, vec2(12.9898,4.1414))) * 43758.5453); }',
+      'float noise(vec2 p){',
+      '  vec2 ip = floor(p); vec2 u = fract(p); u = u*u*(3.0-2.0*u);',
+      '  float res = mix(mix(rand(ip),rand(ip+vec2(1.0,0.0)),u.x),',
+      '                  mix(rand(ip+vec2(0.0,1.0)),rand(ip+vec2(1.0,1.0)),u.x), u.y);',
+      '  return res*res;',
+      '}',
+      'float fbm(vec2 x){',
+      '  float v = 0.0; float a = 0.3; vec2 shift = vec2(100.0);',
+      '  mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.5));',
+      '  for(int i=0;i<NUM_OCTAVES;++i){ v += a*noise(x); x = rot*x*2.0 + shift; a *= 0.4; }',
+      '  return v;',
+      '}',
+      'vec4 tanh4(vec4 x){ vec4 e = exp(-2.0*min(x, vec4(10.0))); return (1.0-e)/(1.0+e); }',
+      'void main(){',
+      '  vec2 shake = vec2(sin(iTime*1.2)*0.005, cos(iTime*2.1)*0.005);',
+      '  vec2 p = ((gl_FragCoord.xy + shake*iResolution.xy) - iResolution.xy*0.5) / iResolution.y * mat2(6.0,-4.0,4.0,6.0);',
+      '  vec2 v; vec4 o = vec4(0.0);',
+      '  float f = 2.0 + fbm(p + vec2(iTime*5.0, 0.0)) * 0.5;',
+      '  for(float i=0.0;i<35.0;i++){',
+      '    v = p + cos(i*i + (iTime + p.x*0.08)*0.025 + i*vec2(13.0,11.0))*3.5 + vec2(sin(iTime*3.0+i)*0.003, cos(iTime*3.5-i)*0.003);',
+      '    float tailNoise = fbm(v + vec2(iTime*0.5, i)) * 0.3 * (1.0 - (i/35.0));',
+      '    vec4 auroraColors = vec4(0.1 + 0.3*sin(i*0.2 + iTime*0.4),',
+      '                             0.3 + 0.5*cos(i*0.3 + iTime*0.5),',
+      '                             0.7 + 0.3*sin(i*0.4 + iTime*0.3), 1.0);',
+      '    vec4 c = auroraColors * exp(sin(i*i + iTime*0.8)) / length(max(v, vec2(v.x*f*0.015, v.y*1.5)));',
+      '    float thinness = smoothstep(0.0, 1.0, i/35.0) * 0.6;',
+      '    o += c * (1.0 + tailNoise*0.8) * thinness;',
+      '  }',
+      '  o = max(o, vec4(0.0));',
+      '  o = tanh4(pow(o/100.0, vec4(1.6)));',
+      '  gl_FragColor = o * 1.5;',
+      '}'
+    ].join('\n');
+
+    function compile(type, src) {
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) { gl.deleteShader(s); return null; }
+      return s;
+    }
+
+    var vs = compile(gl.VERTEX_SHADER, vsSrc);
+    var fs = compile(gl.FRAGMENT_SHADER, fsSrc);
+    if (!vs || !fs) { canvas.style.display = 'none'; return; }
+
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { canvas.style.display = 'none'; return; }
+    gl.useProgram(prog);
+
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'position');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    var uTime = gl.getUniformLocation(prog, 'iTime');
+    var uRes  = gl.getUniformLocation(prog, 'iResolution');
+
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    function resize() {
+      var w = Math.max(1, Math.round(canvas.clientWidth * dpr));
+      var h = Math.max(1, Math.round(canvas.clientHeight * dpr));
+      // interne Auflösung deckeln – der Glow ist weich, Upscaling fällt nicht auf
+      var scale = Math.min(1, 1400 / w);
+      w = Math.round(w * scale); h = Math.round(h * scale);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w; canvas.height = h;
+        gl.viewport(0, 0, w, h);
+      }
+      gl.uniform2f(uRes, w, h);
+    }
+    window.addEventListener('resize', resize, { passive: true });
+    resize();
+
+    var start = performance.now();
+    var raf = null;
+    var running = false;
+    function frame(now) {
+      gl.uniform1f(uTime, (now - start) / 1000);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      raf = requestAnimationFrame(frame);
+    }
+    function play()  { if (!running) { running = true; raf = requestAnimationFrame(frame); } }
+    function pause() { if (running) { running = false; cancelAnimationFrame(raf); } }
+
+    // Nur rendern, wenn der Hero sichtbar ist (spart Akku/GPU)
+    var hero = document.getElementById('hero');
+    if ('IntersectionObserver' in window && hero) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { e.isIntersecting ? play() : pause(); });
+      }, { threshold: 0.02 }).observe(hero);
+    } else {
+      play();
+    }
+    document.addEventListener('visibilitychange', function () {
+      document.hidden ? pause() : (hero && hero.getBoundingClientRect().bottom > 0 ? play() : null);
+    });
+  })();
 })();
 </script>
 
 </body>
 </html>
+
